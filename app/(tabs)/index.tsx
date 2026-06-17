@@ -23,13 +23,53 @@ const COLORS = {
 
 export default function HomeScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [weather] = useState({
-    temp: 31,
-    condition: 'Partly Cloudy',
-    humidity: 65,
-    wind: 12,
-    loading: false,
-  });
+  const [weather, setWeather] = useState({
+  temp: 0,
+  condition: '',
+  humidity: 0,
+  wind: 0,
+  loading: true,
+});
+
+
+  const LAT = 14.0722;
+  const LON = 120.6319;
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`
+        );
+        const data = await res.json();
+        const c = data.current;
+
+        setWeather({
+          temp: Math.round(c.temperature_2m),
+          condition: codeToCondition(c.weather_code),
+          humidity: c.relative_humidity_2m,
+          wind: Math.round(c.wind_speed_10m),
+          loading: false,
+        });
+      } catch (err) {
+        console.error('Weather fetch failed:', err);
+        setWeather((w) => ({ ...w, loading: false }));
+      }
+    };
+
+    fetchWeather();
+  }, []);
+
+  function codeToCondition(code: number): string {
+  if (code === 0) return 'Clear Sky';
+  if (code <= 3) return 'Partly Cloudy';
+  if (code <= 48) return 'Foggy';
+  if (code <= 67) return 'Rainy';
+  if (code <= 77) return 'Snowy';
+  if (code <= 82) return 'Rain Showers';
+  if (code <= 99) return 'Thunderstorm';
+  return 'Unknown';
+}
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
