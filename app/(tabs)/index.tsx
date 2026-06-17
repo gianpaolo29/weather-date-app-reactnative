@@ -1,98 +1,278 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const COLORS = {
+  deepCrimson: '#4A0E17',
+  darkBurgundy: '#2A080C',
+  metallicGold: '#D4AF37',
+  pureWhite: '#FFFFFF',
+  mediumGray: '#A3A3A3',
+  glassLight: 'rgba(255,255,255,0.07)',
+  glassMedium: 'rgba(255,255,255,0.12)',
+};
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [weather] = useState({
+    temp: 31,
+    condition: 'Partly Cloudy',
+    humidity: 65,
+    wind: 12,
+    loading: false,
+  });
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${hours}:${minutes}:${seconds} ${ampm}`;
+  };
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+  return (
+    <LinearGradient
+      colors={['#5A1020', '#4A0E17', '#3A0C14', '#2A080C']}
+      style={styles.container}
+      start={{ x: 0.7, y: 0 }}
+      end={{ x: 0.2, y: 1 }}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.locationWrapper}>
+            <View style={styles.locationPill}>
+              <Ionicons name="location-sharp" size={14} color={COLORS.metallicGold} />
+              <Text style={styles.locationText}>NASUGBU BATANGAS, PH</Text>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="time-outline" size={16} color={COLORS.metallicGold} />
+              <Text style={styles.cardLabel}>CURRENT TIME</Text>
+            </View>
+            <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color={COLORS.mediumGray} />
+              <Text style={styles.dateText}>{formatDate(currentTime)}</Text>
+            </View>
+          </View>
+
+      
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="help-circle-outline" size={16} color={COLORS.metallicGold} />
+              <Text style={styles.cardLabel}>WEATHER UPDATES</Text>
+            </View>
+            {weather.loading ? (
+              <ActivityIndicator color={COLORS.pureWhite} size="large" style={{ marginVertical: 20 }} />
+            ) : (
+              <>
+                <Text style={styles.tempText}>{weather.temp}°C</Text>
+                <Text style={styles.conditionText}>{weather.condition}</Text>
+                <View style={styles.weatherStatsRow}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>HUMIDITY</Text>
+                    <Text style={styles.statValue}>{weather.humidity}%</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>WIND</Text>
+                    <Text style={styles.statValue}>{weather.wind} km/h</Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialCommunityIcons name="apps" size={16} color={COLORS.metallicGold} />
+              <Text style={styles.cardLabel}>REACT NATIVE</Text>
+            </View>
+            <Text style={styles.nameText}>SIR MAGS</Text>
+          </View>
+
+          <View style={styles.footer}>
+            <MaterialCommunityIcons name="apps" size={12} color={COLORS.metallicGold} />
+            <Text style={styles.footerText}>REACT NATIVE • LIVE MONITORS</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    paddingTop: StatusBar.currentHeight ?? 44,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+  },
+
+  locationWrapper: {
+    alignItems: 'center',
+    marginBottom: 50,
+    marginTop: 8,
+  },
+  locationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 50,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  locationText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+  },
+
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 12,
   },
-  stepContainer: {
-    gap: 8,
+  cardLabel: {
+    color: '#D4AF37',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
+
+  timeText: {
+    color: '#FFFFFF',
+    fontSize: 44,
+    fontWeight: '800',
+    letterSpacing: -1,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dateText: {
+    color: '#A3A3A3',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+
+  tempText: {
+    color: '#FFFFFF',
+    fontSize: 56,
+    fontWeight: '800',
+    letterSpacing: -2,
+    marginBottom: 4,
+  },
+  conditionText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '400',
+    marginBottom: 20,
+  },
+  weatherStatsRow: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginVertical: 12,
+  },
+  statLabel: {
+    color: '#A3A3A3',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+  statValue: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+
+
+  nameText: {
+    color: '#FFFFFF',
+    fontSize: 38,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textAlign: 'center',
+    paddingVertical: 10,
+  },
+
+
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 60,
+  },
+  footerText: {
+    color: '#D4AF37',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
 });
